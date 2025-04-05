@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kingdom - Resource Management Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: url(dorf.jpg) #f4f4f4;
+        background-size: cover;
+        padding: 20px;
+      }
+      h1 {
+        color: #fff;
+      }
+      .game {
+        background: url(parchment.jpg) no-repeat center;
+        padding: 20px;
+        border-radius: 10px;
+        width: 600px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+      }
+      #stats {
+        background: url(parchment.jpg) no-repeat center; 
+        background-size: contain;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      input {
+        width: 80px;
+        padding: 5px;
+        text-align: center;
+      }
+      ul {
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Kingdom - Resource Manager</h1>
+    <div class="game">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Buy & Sell Land: Manage your territory wisely.</li>
+        <li>Buy & Feed Grain: Keep your people from starving.</li>
+        <li>Set Taxes: High taxes bring more gold but can slow growth.</li>
+        <li>End the Year: Time advances, and random events happen.</li>
+        <li>Win by reaching 1,000,000 gold or lose if your people die.</li>
+      </ul>
+    </div>
+
+    <div class="game">
+      <p><b>Year:</b> <span id="year">1500</span></p>
+      <p><b>Gold:</b> <span id="gold">1000</span></p>
+      <p><b>Land:</b> <span id="land">100</span> acres</p>
+      <p><b>Grain:</b> <span id="grain">500</span> bushels</p>
+      <p><b>Population:</b> <span id="population">50</span></p>
+      <p><b>Tax Rate:</b> <span id="taxRate">10</span>%</p>
+      </div>
+      <div class="game">
+
+      <h3>Actions</h3>
+      <label>Buy Land: <input type="number" id="buyLand" value="0" /></label>
+      <button onclick="buyLand()">Buy</button><br />
+
+      <label>Sell Land: <input type="number" id="sellLand" value="0" /></label>
+      <button onclick="sellLand()">Sell</button><br />
+
+      <label>Buy Grain: <input type="number" id="buyGrain" value="0" /></label>
+      <button onclick="buyGrain()">Buy</button><br />
+
+      <label>Feed Population: <input type="number" id="feedGrain" value="0" /></label>
+      <button onclick="feedPeople()">Feed</button><br />
+
+      <label>Set Tax Rate (%): <input type="number" id="setTax" value="10" /></label>
+      <button onclick="setTax()">Set</button><br />
+
+      <button onclick="endYear()">End Year</button>
+    </div>
+
+    <script>
+      let year = 1000,
+        gold = 1000,
+        land = 100,
+        grain = 500,
+        population = 50,
+        taxRate = 10;
+
+      let triggeredEvents = [];
+      let lastYear = year;
+
+      const events = {
+        1066: {
+          message: "The Norman Conquest of England brings new territories.",
+          effect: () => {
+            land = Math.floor(land * 1.10);
+            population = Math.floor(population * 0.95);
+            return "+10% Land, -5% Population";
+          },
+        },
+        1215: {
+          message: "The Magna Carta limits royal power and inspires the people.",
+          effect: () => {
+            gold = Math.floor(gold * 0.95);
+            population = Math.floor(population * 1.05);
+            return "-5% Gold, +5% Population";
+          },
+        },
+        1347: {
+          message: "The Black Death sweeps through Europe!",
+          effect: () => {
+            population = Math.floor(population * 0.70);
+            grain = Math.floor(grain * 0.80);
+            return "-30% Population, -20% Grain";
+          },
+        },
+        1492: {
+          message: "Columbus discovers the New World, boosting your kingdom's wealth!",
+          effect: () => {
+            gold = Math.floor(gold * 1.10);
+            land = Math.floor(land * 1.10);
+            return "+10% Gold, +10% Land";
+          },
+        },
+        1618: {
+          message: "The Thirty Years' War begins. A time of devastation.",
+          effect: () => {
+            gold = Math.floor(gold * 0.60);
+            population = Math.floor(population * 0.80);
+            return "-40% Gold, -20% Population";
+          },
+        },
+        1666: {
+          message: "The Great Fire of London causes destruction.",
+          effect: () => {
+            land = Math.floor(land * 0.90);
+            grain = Math.floor(grain * 0.80);
+            return "-10% Land, -20% Grain";
+          },
+        },
+        1789: {
+          message: "French Revolution begins! Uprising among the people.",
+          effect: () => {
+            population = Math.floor(population * 0.90);
+            gold = Math.floor(gold * 0.60);
+            return "-10% Population, -40% Gold";
+          },
+        },
+        1792: {
+          message: "The guillotine is introduced. Executions reduce the population.",
+          effect: () => {
+            population = Math.floor(population * 0.85);
+            grain = Math.floor(grain * 0.90);
+            return "-15% Population, -10% Grain";
+          },
+        },
+        1845: {
+          message: "Potato famine hits the land! Food crisis emerges.",
+          effect: () => {
+            grain = Math.floor(grain * 0.60);
+            population = Math.floor(population * 0.80);
+            return "-40% Grain, -20% Population";
+          },
+        },
+        1914: {
+          message: "World War I begins. War consumes resources.",
+          effect: () => {
+            gold = Math.floor(gold * 0.50);
+            population = Math.floor(population * 0.80);
+            grain = Math.floor(grain * 0.80);
+            return "-50% Gold, -20% Population, -20% Grain";
+          },
+        },
+        1945: {
+          message: "World War II ends. Rebuilding begins.",
+          effect: () => {
+            population = Math.floor(population * 1.30);
+            land = Math.floor(land * 1.20);
+            return "+30% Population, +20% Land";
+          },
+        },
+      };
+
+      function updateUI() {
+        document.getElementById("year").innerText = year;
+        document.getElementById("gold").innerText = gold;
+        document.getElementById("land").innerText = land;
+        document.getElementById("grain").innerText = grain;
+        document.getElementById("population").innerText = population;
+        document.getElementById("taxRate").innerText = taxRate;
+      }
+
+      function buyLand() {
+        let amount = parseInt(document.getElementById("buyLand").value);
+        if (gold >= amount * 20) {
+          land += amount;
+          gold -= amount * 20;
+        } else {
+          alert("Not enough gold!");
+        }
+        updateUI();
+      }
+
+      function sellLand() {
+        let amount = parseInt(document.getElementById("sellLand").value);
+        if (land >= amount) {
+          land -= amount;
+          gold += amount * 15;
+        } else {
+          alert("Not enough land!");
+        }
+        updateUI();
+      }
+
+      function buyGrain() {
+        let amount = parseInt(document.getElementById("buyGrain").value);
+        if (gold >= amount * 2) {
+          grain += amount;
+          gold -= amount * 2;
+        } else {
+          alert("Not enough gold!");
+        }
+        updateUI();
+      }
+
+      function feedPeople() {
+        let amount = parseInt(document.getElementById("feedGrain").value);
+        if (grain >= amount) {
+          grain -= amount;
+          population += Math.floor(amount / 10);
+        } else {
+          alert("Not enough grain!");
+        }
+        updateUI();
+      }
+
+      function setTax() {
+        let newRate = parseInt(document.getElementById("setTax").value);
+        if (newRate >= 0 && newRate <= 50) {
+          taxRate = newRate;
+        } else {
+          alert("Tax rate must be between 0% and 50%!");
+        }
+        updateUI();
+      }
+
+      function endYear() {
+        lastYear = year;
+        year += 10;
+
+        let taxIncome = Math.floor(population * taxRate);
+        gold += taxIncome;
+        let grainConsumption = Math.floor(population * 2);
+        grain -= grainConsumption;
+
+        if (grain < 0) {
+          let deaths = Math.floor(Math.abs(grain) / 2);
+          population -= deaths;
+          grain = 0;
+          alert(deaths + " people starved!");
+        }
+
+        // Check for historical events
+        let eventTriggeredThisYear = false;
+
+        for (let eYear in events) {
+          eYear = parseInt(eYear);
+          if (lastYear < eYear && year >= eYear && !triggeredEvents.includes(eYear)) {
+            let effectsText = events[eYear].effect();
+            alert(
+              "⚡ Historical Event (" + eYear + "): " +
+                events[eYear].message +
+                "\nEffect: " +
+                effectsText
+            );
+            triggeredEvents.push(eYear);
+            eventTriggeredThisYear = true;
+          }
+        }
+
+        // Apply random changes only if no major historical event was triggered
+        if (!eventTriggeredThisYear) {
+          let newPeople = Math.floor(Math.random() * 10);
+          population += newPeople;
+          land += Math.floor(Math.random() * 5);
+          gold -= Math.floor(Math.random() * 50);
+        }
+
+        // Harvest (always happens)
+        grain = land + Math.floor(land * 0.3);
+
+        if (gold >= 1000000) {
+          alert("Congratulations! You have become the richest ruler in history!");
+          resetGame();
+        }
+
+        if (population <= 0) {
+          alert("Your kingdom has collapsed!");
+          resetGame();
+        }
+
+        updateUI();
+      }
+
+      function resetGame() {
+        year = 1500;
+        lastYear = 1500;
+        gold = 1000;
+        land = 100;
+        grain = 500;
+        population = 50;
+        taxRate = 10;
+        triggeredEvents = [];
+        updateUI();
+      }
+
+      updateUI();
+    </script>
+  </body>
+</html>
